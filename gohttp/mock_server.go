@@ -1,6 +1,8 @@
 package gohttp
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -50,7 +52,12 @@ func FlushMocks() {
 }
 
 func (m *MockServer) getMockKey(method, url, requestBody string) string {
-	key := method + url + requestBody
+
+	hash := md5.New()
+	hash.Write([]byte(method + url + requestBody))
+
+	key := hex.EncodeToString(hash.Sum(nil))
+
 	return key
 }
 
