@@ -41,6 +41,14 @@ func AddMock(mock Mock) {
 	mockServer.mocks[key] = &mock
 }
 
+func FlushMocks() {
+	mockServer.concurrentLock.Lock()
+	defer mockServer.concurrentLock.Unlock()
+
+	mockServer.mocks = make(map[string]*Mock)
+
+}
+
 func (m *MockServer) getMockKey(method, url, requestBody string) string {
 	key := method + url + requestBody
 	return key

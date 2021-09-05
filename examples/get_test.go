@@ -2,19 +2,28 @@ package examples
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/sebagalan/go-httpclient/gohttp"
 )
 
-func TestGetEndpoints(t *testing.T) {
+func TestMain(m *testing.M) {
 
+	fmt.Printf("Starting MockServer\n")
 	gohttp.StartMockSever()
+
+	os.Exit(m.Run())
+}
+
+func TestGetEndpoints(t *testing.T) {
 
 	t.Run("Test Error Fetching from url", func(t *testing.T) {
 
+		gohttp.FlushMocks()
 		gohttp.AddMock(gohttp.Mock{
 			Method: http.MethodGet,
 			Url:    "https://api.github.com",
