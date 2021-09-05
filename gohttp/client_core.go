@@ -86,6 +86,10 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 		}
 	}
 
+	if mock := mockServer.getMock(method, url, string(requestBody)); mock != nil {
+		return mock.GetResponse()
+	}
+
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		errors.New("http client fail")
