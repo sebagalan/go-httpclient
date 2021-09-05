@@ -11,7 +11,10 @@ func TestGetRequestHeader(t *testing.T) {
 	headers := make(http.Header)
 
 	headers.Set("X-test-header", "value")
-	client := httpClient{}
+
+	client := httpClient{
+		builder: &clientBuilder{},
+	}
 
 	finalHeaders := client.getRequestHeader(headers)
 
@@ -32,7 +35,10 @@ func TestGetRequestHeader(t *testing.T) {
 func TestGetRequestBody(t *testing.T) {
 
 	headers := make(http.Header)
-	client := httpClient{}
+
+	client := httpClient{
+		builder: &clientBuilder{},
+	}
 
 	t.Run("Nil body", func(t *testing.T) {
 		body, err := client.getRequestBody(headers.Get("Content-type"), nil)
