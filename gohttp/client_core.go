@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"log"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -19,24 +19,22 @@ var (
 )
 
 func (c *httpClient) getHttpClient() *http.Client {
-	if c.client != nil {
-		return c.client
-	}
 
-	dialContext := net.Dialer{
-		Timeout: c.getDialerContextTimeout(),
-	}
+	c.doOnce.Do(func() {
+		dialContext := net.Dialer{
+			Timeout: c.getDialerContextTimeout(),
+		}
 
-	c.client = &http.Client{
-		Timeout: c.getDialerContextTimeout() + c.getResponseHeaderTimeout(),
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost:   c.getMaxIdleConnsPerHost(),
-			ResponseHeaderTimeout: c.getResponseHeaderTimeout(),
-			DialContext:           dialContext.DialContext,
-		},
-	}
+		c.client = &http.Client{
+			Timeout: c.getDialerContextTimeout() + c.getResponseHeaderTimeout(),
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost:   c.getMaxIdleConnsPerHost(),
+				ResponseHeaderTimeout: c.getResponseHeaderTimeout(),
+				DialContext:           dialContext.DialContext,
+			},
+		}
+	})
 
-	log.Println(c.client)
 	return c.client
 }
 
@@ -49,8 +47,6 @@ func (c *httpClient) getMaxIdleConnsPerHost() int {
 }
 
 func (c *httpClient) getResponseHeaderTimeout() time.Duration {
-
-	log.Println(c.builder.responseHeaderTimeout)
 
 	if c.builder.disableTimeout {
 		return 0
@@ -76,7 +72,7 @@ func (c *httpClient) getDialerContextTimeout() time.Duration {
 	return dialerContextTimeout
 }
 
-func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*http.Response, error) {
+func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
 	var requestBody []byte
 	var requestBodyErrors error
 
@@ -100,7 +96,23 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 
 	client := c.getHttpClient()
 
-	return client.Do(request)
+	stdHttpResponse, err := client.Do(request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer stdHttpResponse.Body.Close()
+	stdBodyBytes, _ := ioutil.ReadAll(stdHttpResponse.Body)
+
+	response := &Response{
+		status:     stdHttpResponse.Status,
+		statusCode: stdHttpResponse.StatusCode,
+		headers:    stdHttpResponse.Header,
+		body:       stdBodyBytes,
+	}
+
+	return response, nil
 }
 
 func (c *httpClient) getRequestHeader(requestHeaders http.Header) http.Header {
