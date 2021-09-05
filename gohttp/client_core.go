@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -12,9 +13,9 @@ import (
 )
 
 var (
-	defaultMaxIdleConnsPerHost   = 2
-	defaultResponseHeaderTimeout = 200 * time.Millisecond
-	dialerContextTimeout         = 500 * time.Millisecond
+	defaultMaxIdleConnsPerHost   = 5
+	defaultResponseHeaderTimeout = 2001 * time.Millisecond
+	dialerContextTimeout         = 5 * time.Millisecond
 )
 
 func (c *httpClient) getHttpClient() *http.Client {
@@ -27,6 +28,7 @@ func (c *httpClient) getHttpClient() *http.Client {
 	}
 
 	c.client = &http.Client{
+		Timeout: c.getDialerContextTimeout() + c.getResponseHeaderTimeout(),
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost:   c.getMaxIdleConnsPerHost(),
 			ResponseHeaderTimeout: c.getResponseHeaderTimeout(),
@@ -34,12 +36,13 @@ func (c *httpClient) getHttpClient() *http.Client {
 		},
 	}
 
+	log.Println(c.client)
 	return c.client
 }
 
 func (c *httpClient) getMaxIdleConnsPerHost() int {
-	if c.maxIdleConnsPerHost > 0 {
-		return c.maxIdleConnsPerHost
+	if c.builder.maxIdleConnsPerHost > 0 {
+		return c.builder.maxIdleConnsPerHost
 	}
 
 	return defaultMaxIdleConnsPerHost
@@ -47,12 +50,14 @@ func (c *httpClient) getMaxIdleConnsPerHost() int {
 
 func (c *httpClient) getResponseHeaderTimeout() time.Duration {
 
-	if c.disableTimeout {
+	log.Println(c.builder.responseHeaderTimeout)
+
+	if c.builder.disableTimeout {
 		return 0
 	}
 
-	if c.responseHeaderTimeout > 0 {
-		return c.responseHeaderTimeout
+	if c.builder.responseHeaderTimeout > 0 {
+		return c.builder.responseHeaderTimeout
 	}
 
 	return defaultResponseHeaderTimeout
@@ -60,12 +65,12 @@ func (c *httpClient) getResponseHeaderTimeout() time.Duration {
 
 func (c *httpClient) getDialerContextTimeout() time.Duration {
 
-	if c.disableTimeout {
+	if c.builder.disableTimeout {
 		return 0
 	}
 
-	if c.dialerContextTimeout > 0 {
-		return c.dialerContextTimeout
+	if c.builder.dialerContextTimeout > 0 {
+		return c.builder.dialerContextTimeout
 	}
 
 	return dialerContextTimeout
@@ -102,7 +107,7 @@ func (c *httpClient) getRequestHeader(requestHeaders http.Header) http.Header {
 
 	result := make(http.Header)
 
-	for header, value := range c.headers {
+	for header, value := range c.builder.headers {
 		if len(value) > 0 {
 			result.Set(header, value[0])
 		}

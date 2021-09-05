@@ -2,59 +2,19 @@ package gohttp
 
 import (
 	"net/http"
-	"time"
 )
 
 type httpClient struct {
-	client                *http.Client
-	maxIdleConnsPerHost   int
-	responseHeaderTimeout time.Duration
-	dialerContextTimeout  time.Duration
-	headers               http.Header
-	disableTimeout        bool
+	builder *clientBuilder
+	client  *http.Client
 }
 
-func NewHttpClient() HttpClient {
-
-	httpClient := &httpClient{
-		headers: make(http.Header),
-	}
-
-	httpClient.headers.Set("Accept", "application/json")
-	httpClient.headers.Set("Content-Type", "application/json")
-
-	return httpClient
-}
-
-type HttpClient interface {
+type Client interface {
 	Get(string, http.Header) (*http.Response, error)
 	Post(string, http.Header, interface{}) (*http.Response, error)
 	Patch(string, http.Header, interface{}) (*http.Response, error)
 	Put(string, http.Header, interface{}) (*http.Response, error)
 	Delete(string, http.Header) (*http.Response, error)
-
-	SetMaxIdleConnsPerHost(int)
-	SetResponseHeaderTimeout(time.Duration)
-	SetDialerContextTimeout(time.Duration)
-	DisableTimeout(bool)
-}
-
-func SetHeaders() {}
-
-func (c *httpClient) SetMaxIdleConnsPerHost(maxIdleConnsPerHost int) {
-	c.maxIdleConnsPerHost = maxIdleConnsPerHost
-}
-
-func (c *httpClient) SetResponseHeaderTimeout(responseHeaderTimeout time.Duration) {
-	c.responseHeaderTimeout = responseHeaderTimeout
-}
-
-func (c *httpClient) SetDialerContextTimeout(dialerContextTimeout time.Duration) {
-	c.dialerContextTimeout = dialerContextTimeout
-}
-
-func (c *httpClient) DisableTimeout(disable bool) {
-	c.disableTimeout = disable
 }
 
 func (c *httpClient) Get(url string, headers http.Header) (*http.Response, error) {
