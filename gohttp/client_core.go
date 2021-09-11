@@ -25,6 +25,11 @@ func (c *httpClient) getHttpClient() *http.Client {
 			Timeout: c.getDialerContextTimeout(),
 		}
 
+		if c.builder.client != nil {
+			c.client = c.builder.client
+			return
+		}
+
 		c.client = &http.Client{
 			Timeout: c.getDialerContextTimeout() + c.getResponseHeaderTimeout(),
 			Transport: &http.Transport{
