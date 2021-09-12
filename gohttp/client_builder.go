@@ -11,6 +11,7 @@ type clientBuilder struct {
 	dialerContextTimeout  time.Duration
 	headers               http.Header
 	disableTimeout        bool
+	userAgent             string
 
 	client *http.Client
 }
@@ -22,6 +23,7 @@ type ClientBuilder interface {
 	DisableTimeout(bool) ClientBuilder
 	SetHeaders(http.Header) ClientBuilder
 	SetHttpClient(client *http.Client) ClientBuilder
+	SetUserAgent(userAgent string) ClientBuilder
 
 	Build() Client
 }
@@ -75,5 +77,9 @@ func (c *clientBuilder) DisableTimeout(disable bool) ClientBuilder {
 
 func (c *clientBuilder) SetHttpClient(client *http.Client) ClientBuilder {
 	c.client = client
+	return c
+}
+
+func (c *clientBuilder) SetUserAgent(userAgent string) ClientBuilder {
 	return c
 }

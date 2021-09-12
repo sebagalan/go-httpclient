@@ -15,5 +15,6 @@ func getHttpClient() gohttp.Client {
 	return gohttp.NewClientBuilder().
 		SetDialerContextTimeout(2 * time.Second).
 		SetResponseHeaderTimeout(3 * time.Second).
+		SetUserAgent("mycustom-useragent").
 		Build()
 }
