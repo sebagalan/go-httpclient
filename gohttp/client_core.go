@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sebagalan/go-httpclient/core"
+	"github.com/sebagalan/go-httpclient/gohttp_mock"
 )
 
 var (
@@ -23,6 +26,11 @@ func (c *httpClient) getHttpClient() *http.Client {
 	c.doOnce.Do(func() {
 		dialContext := net.Dialer{
 			Timeout: c.getDialerContextTimeout(),
+		}
+
+		if c.builder.client != nil {
+			c.client = c.builder.client
+			return
 		}
 
 		c.client = &http.Client{
@@ -72,7 +80,7 @@ func (c *httpClient) getDialerContextTimeout() time.Duration {
 	return dialerContextTimeout
 }
 
-func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*core.Response, error) {
 	var requestBody []byte
 	var requestBodyErrors error
 
@@ -86,7 +94,7 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 		}
 	}
 
-	if mock := mockServer.getMock(method, url, string(requestBody)); mock != nil {
+	if mock := gohttp_mock.GetMock(method, url, string(requestBody)); mock != nil {
 		return mock.GetResponse()
 	}
 
@@ -109,33 +117,14 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 	defer stdHttpResponse.Body.Close()
 	stdBodyBytes, _ := ioutil.ReadAll(stdHttpResponse.Body)
 
-	response := &Response{
-		status:     stdHttpResponse.Status,
-		statusCode: stdHttpResponse.StatusCode,
-		headers:    stdHttpResponse.Header,
-		body:       stdBodyBytes,
+	response := &core.Response{
+		Status:     stdHttpResponse.Status,
+		StatusCode: stdHttpResponse.StatusCode,
+		Headers:    stdHttpResponse.Header,
+		Body:       stdBodyBytes,
 	}
 
 	return response, nil
-}
-
-func (c *httpClient) getRequestHeader(requestHeaders http.Header) http.Header {
-
-	result := make(http.Header)
-
-	for header, value := range c.builder.headers {
-		if len(value) > 0 {
-			result.Set(header, value[0])
-		}
-	}
-
-	for header, value := range requestHeaders {
-		if len(value) > 0 {
-			result.Set(header, value[0])
-		}
-	}
-
-	return result
 }
 
 func (c *httpClient) getRequestBody(contentType string, body interface{}) ([]byte, error) {

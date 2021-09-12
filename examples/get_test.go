@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sebagalan/go-httpclient/gohttp"
+	"github.com/sebagalan/go-httpclient/gohttp_mock"
 )
 
 func TestMain(m *testing.M) {
 
 	fmt.Printf("Starting MockServer\n")
-	gohttp.StartMockSever()
+	gohttp_mock.StartMockSever()
 
 	os.Exit(m.Run())
 }
@@ -23,8 +23,8 @@ func TestGetEndpoints(t *testing.T) {
 
 	t.Run("Test Error Fetching from url", func(t *testing.T) {
 
-		gohttp.FlushMocks()
-		gohttp.AddMock(gohttp.Mock{
+		gohttp_mock.DeleteMocks()
+		gohttp_mock.AddMock(gohttp_mock.Mock{
 			Method: http.MethodGet,
 			Url:    "https://api.github.com",
 			Error:  errors.New("Failed to get resource"),
@@ -47,7 +47,7 @@ func TestGetEndpoints(t *testing.T) {
 
 	t.Run("Test Error Unmarshaler", func(t *testing.T) {
 
-		gohttp.AddMock(gohttp.Mock{
+		gohttp_mock.AddMock(gohttp_mock.Mock{
 			Method:             http.MethodGet,
 			Url:                "https://api.github.com",
 			ResponseStatusCode: http.StatusOK,
@@ -71,7 +71,7 @@ func TestGetEndpoints(t *testing.T) {
 
 	t.Run("Test No Error", func(t *testing.T) {
 
-		gohttp.AddMock(gohttp.Mock{
+		gohttp_mock.AddMock(gohttp_mock.Mock{
 			Method:             http.MethodGet,
 			Url:                "https://api.github.com",
 			ResponseStatusCode: http.StatusOK,
