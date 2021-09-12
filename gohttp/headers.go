@@ -25,7 +25,7 @@ func (c *httpClient) getRequestHeader(requestHeaders http.Header) http.Header {
 		}
 	}
 
-	if c.builder.userAgent != nil {
+	if c.builder.userAgent != "" {
 		if result.Get("User-Agent") != "" {
 			return result
 		}

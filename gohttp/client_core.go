@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sebagalan/go-httpclient/core"
+	"github.com/sebagalan/go-httpclient/gohttp_mock"
 )
 
 var (
@@ -77,7 +80,7 @@ func (c *httpClient) getDialerContextTimeout() time.Duration {
 	return dialerContextTimeout
 }
 
-func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*Response, error) {
+func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*core.Response, error) {
 	var requestBody []byte
 	var requestBodyErrors error
 
@@ -91,7 +94,7 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 		}
 	}
 
-	if mock := mockServer.getMock(method, url, string(requestBody)); mock != nil {
+	if mock := gohttp_mock.GetMock(method, url, string(requestBody)); mock != nil {
 		return mock.GetResponse()
 	}
 
@@ -114,11 +117,11 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 	defer stdHttpResponse.Body.Close()
 	stdBodyBytes, _ := ioutil.ReadAll(stdHttpResponse.Body)
 
-	response := &Response{
-		status:     stdHttpResponse.Status,
-		statusCode: stdHttpResponse.StatusCode,
-		headers:    stdHttpResponse.Header,
-		body:       stdBodyBytes,
+	response := &core.Response{
+		Status:     stdHttpResponse.Status,
+		StatusCode: stdHttpResponse.StatusCode,
+		Headers:    stdHttpResponse.Header,
+		Body:       stdBodyBytes,
 	}
 
 	return response, nil

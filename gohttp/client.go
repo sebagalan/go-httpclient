@@ -3,6 +3,8 @@ package gohttp
 import (
 	"net/http"
 	"sync"
+
+	"github.com/sebagalan/go-httpclient/core"
 )
 
 type httpClient struct {
@@ -12,29 +14,29 @@ type httpClient struct {
 }
 
 type Client interface {
-	Get(string, ...http.Header) (*Response, error)
-	Post(string, interface{}, ...http.Header) (*Response, error)
-	Patch(string, interface{}, ...http.Header) (*Response, error)
-	Put(string, interface{}, ...http.Header) (*Response, error)
-	Delete(string, ...http.Header) (*Response, error)
+	Get(string, ...http.Header) (*core.Response, error)
+	Post(string, interface{}, ...http.Header) (*core.Response, error)
+	Patch(string, interface{}, ...http.Header) (*core.Response, error)
+	Put(string, interface{}, ...http.Header) (*core.Response, error)
+	Delete(string, ...http.Header) (*core.Response, error)
 }
 
-func (c *httpClient) Get(url string, headers ...http.Header) (*Response, error) {
+func (c *httpClient) Get(url string, headers ...http.Header) (*core.Response, error) {
 	return c.do(http.MethodGet, url, getHeaders(headers...), nil)
 }
 
-func (c *httpClient) Post(url string, body interface{}, headers ...http.Header) (*Response, error) {
+func (c *httpClient) Post(url string, body interface{}, headers ...http.Header) (*core.Response, error) {
 	return c.do(http.MethodPost, url, getHeaders(headers...), body)
 }
 
-func (c *httpClient) Patch(url string, body interface{}, headers ...http.Header) (*Response, error) {
+func (c *httpClient) Patch(url string, body interface{}, headers ...http.Header) (*core.Response, error) {
 	return c.do(http.MethodPatch, url, getHeaders(headers...), body)
 }
 
-func (c *httpClient) Put(url string, body interface{}, headers ...http.Header) (*Response, error) {
+func (c *httpClient) Put(url string, body interface{}, headers ...http.Header) (*core.Response, error) {
 	return c.do(http.MethodPut, url, getHeaders(headers...), body)
 }
 
-func (c *httpClient) Delete(url string, headers ...http.Header) (*Response, error) {
+func (c *httpClient) Delete(url string, headers ...http.Header) (*core.Response, error) {
 	return c.do(http.MethodDelete, url, getHeaders(headers...), nil)
 }

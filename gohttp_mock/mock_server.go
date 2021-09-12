@@ -1,4 +1,4 @@
-package gohttp
+package gohttp_mock
 
 import (
 	"crypto/md5"
@@ -38,12 +38,12 @@ func AddMock(mock Mock) {
 	mockServer.concurrentLock.Lock()
 	defer mockServer.concurrentLock.Unlock()
 
-	key := mockServer.getMockKey(mock.Method, mock.Url, mock.RequestBody)
+	key := GetMockKey(mock.Method, mock.Url, mock.RequestBody)
 
 	mockServer.mocks[key] = &mock
 }
 
-func FlushMocks() {
+func DeleteMocks() {
 	mockServer.concurrentLock.Lock()
 	defer mockServer.concurrentLock.Unlock()
 
@@ -51,7 +51,7 @@ func FlushMocks() {
 
 }
 
-func (m *MockServer) getMockKey(method, url, requestBody string) string {
+func GetMockKey(method, url, requestBody string) string {
 
 	hash := md5.New()
 	hash.Write([]byte(method + url + requestBody))
@@ -61,9 +61,9 @@ func (m *MockServer) getMockKey(method, url, requestBody string) string {
 	return key
 }
 
-func (m *MockServer) getMock(method, url, requestBody string) *Mock {
+func GetMock(method, url, requestBody string) *Mock {
 	if mockServer.enable {
-		key := m.getMockKey(method, url, requestBody)
+		key := GetMockKey(method, url, requestBody)
 
 		mock := mockServer.mocks[key]
 
