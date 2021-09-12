@@ -3,55 +3,58 @@ package gohttp_mock
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
-	"fmt"
 	"sync"
+
+	"github.com/sebagalan/go-httpclient/core"
 )
 
-type MockServer struct {
+type mockServer struct {
 	enable         bool
 	concurrentLock sync.Mutex
+
+	httpClient core.HttpClient
 
 	mocks map[string]*Mock
 }
 
 var (
-	mockServer MockServer = MockServer{
-		mocks: make(map[string]*Mock),
+	MockServer mockServer = mockServer{
+		mocks:      make(map[string]*Mock),
+		httpClient: &httpClientMock{},
 	}
 )
 
-func StartMockSever() {
-	mockServer.concurrentLock.Lock()
-	defer mockServer.concurrentLock.Unlock()
-	mockServer.enable = true
+func (m *mockServer) StartMockSever() {
+	m.concurrentLock.Lock()
+	defer m.concurrentLock.Unlock()
+	m.enable = true
 }
 
-func StopMockSever() {
-	mockServer.concurrentLock.Lock()
-	defer mockServer.concurrentLock.Unlock()
+func (m *mockServer) StopMockSever() {
+	m.concurrentLock.Lock()
+	defer m.concurrentLock.Unlock()
 
-	mockServer.enable = false
+	m.enable = false
 }
 
-func AddMock(mock Mock) {
-	mockServer.concurrentLock.Lock()
-	defer mockServer.concurrentLock.Unlock()
+func (m *mockServer) AddMock(mock Mock) {
+	m.concurrentLock.Lock()
+	defer m.concurrentLock.Unlock()
 
-	key := GetMockKey(mock.Method, mock.Url, mock.RequestBody)
+	key := m.GetMockKey(mock.Method, mock.Url, mock.RequestBody)
 
-	mockServer.mocks[key] = &mock
+	m.mocks[key] = &mock
 }
 
-func DeleteMocks() {
-	mockServer.concurrentLock.Lock()
-	defer mockServer.concurrentLock.Unlock()
+func (m *mockServer) DeleteMocks() {
+	m.concurrentLock.Lock()
+	defer m.concurrentLock.Unlock()
 
-	mockServer.mocks = make(map[string]*Mock)
+	m.mocks = make(map[string]*Mock)
 
 }
 
-func GetMockKey(method, url, requestBody string) string {
+func (m *mockServer) GetMockKey(method, url, requestBody string) string {
 
 	hash := md5.New()
 	hash.Write([]byte(method + url + requestBody))
@@ -61,20 +64,10 @@ func GetMockKey(method, url, requestBody string) string {
 	return key
 }
 
-func GetMock(method, url, requestBody string) *Mock {
-	if mockServer.enable {
-		key := GetMockKey(method, url, requestBody)
+func (m *mockServer) IsMockServerEnable() bool {
+	return m.enable
+}
 
-		mock := mockServer.mocks[key]
-
-		if mock != nil {
-			return mock
-		}
-
-		return &Mock{
-			Error: errors.New(fmt.Sprintf("no mock for %s %s", method, url)),
-		}
-	}
-
-	return nil
+func (m *mockServer) GetMockClient() core.HttpClient {
+	return m.httpClient
 }

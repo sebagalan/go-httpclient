@@ -21,7 +21,11 @@ var (
 	dialerContextTimeout         = 5 * time.Millisecond
 )
 
-func (c *httpClient) getHttpClient() *http.Client {
+func (c *httpClient) getHttpClient() core.HttpClient {
+
+	if gohttp_mock.MockServer.IsMockServerEnable() {
+		return gohttp_mock.MockServer.GetMockClient()
+	}
 
 	c.doOnce.Do(func() {
 		dialContext := net.Dialer{
@@ -94,10 +98,6 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 		}
 	}
 
-	if mock := gohttp_mock.GetMock(method, url, string(requestBody)); mock != nil {
-		return mock.GetResponse()
-	}
-
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		errors.New("http client fail")
@@ -106,9 +106,7 @@ func (c *httpClient) do(method string, url string, headers http.Header, body int
 
 	request.Header = requestHeaders
 
-	client := c.getHttpClient()
-
-	stdHttpResponse, err := client.Do(request)
+	stdHttpResponse, err := c.getHttpClient().Do(request)
 
 	if err != nil {
 		return nil, err
